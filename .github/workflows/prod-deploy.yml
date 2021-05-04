@@ -22,10 +22,6 @@ jobs:
         env:
           GITHUB_USERNAME: danni-popova
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ## Traefik labels
-          HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}.rule=Host(`${{ secrets.PROD_HOSTNAME }}`) && PathPrefix(`/api/${{ github.event.repository.name }}`)
-          TLS_LABEL: traefik.http.routers.${{ github.event.repository.name }}.tls=true
-          CERT_LABEL: traefik.http.routers.${{ github.event.repository.name }}.tls.certresolver=letsencrypt
 
         with:
           host: ${{ secrets.PROD_DO_DROPLET_IP }}
@@ -36,7 +32,7 @@ jobs:
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p "${{ secrets.DOCKER_PASSWORD }}"
             docker pull ${{ github.repository }}:latest
             docker rm -f ${{ github.event.repository.name }}
-            docker run -d --name ${{ github.event.repository.name }} --network ${{ secrets.NETWORK }} --label "$HOST_LABEL" --label "$TLS_LABEL" --label "$CERT_LABEL" --env-file ./build/.env  ${{ github.repository }}
+            docker run -d --name ${{ github.event.repository.name }} --network ${{ secrets.NETWORK }} --env-file ./build/.env  ${{ github.repository }}
       -
         name: Send discord failure message
         if: ${{ failure() }}
