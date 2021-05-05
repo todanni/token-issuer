@@ -25,5 +25,5 @@ func main() {
 	server.NewTokenService(r, cfg)
 
 	// Start the servers and listen
-	log.Fatal(http.ListenAndServe(":80", r))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
