@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/lestrrat-go/jwx/jwa"
@@ -31,26 +32,22 @@ type tokenService struct {
 func (s *tokenService) IssueToken(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from request
 	params := r.URL.Query()
+	uid, err := strconv.Atoi(params["uid"][0])
+	if err != nil {
+		http.Error(w, "Couldn't convert user ID to int", http.StatusBadRequest)
+	}
 
 	// Generate JWT and sign with JWK
 	t := jwt.New()
 	t.Set(jwt.ExpirationKey, time.Now().Add(time.Hour*24).Unix())
 	t.Set(jwt.IssuerKey, token.Issuer)
-	t.Set("uid", params["uid"][0])
+	t.Set("uid", uid)
 
 	signedJWT, err := jwt.Sign(t, jwa.RS256, s.config.PrivateJWK)
 	if err != nil {
 		http.Error(w, "Couldn't sign JWT", http.StatusInternalServerError)
 	}
-
-	type response struct {
-		Token string `json:"token"`
-	}
-	marshalled, _ := json.Marshal(&response{
-		Token: string(signedJWT),
-	})
-	w.Header().Add("Content-Type", "application/json")
-	_, err = w.Write(marshalled)
+	_, err = w.Write(signedJWT)
 }
 
 func (s *tokenService) ServePublicKey(w http.ResponseWriter, r *http.Request) {
