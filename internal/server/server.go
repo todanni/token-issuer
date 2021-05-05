@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwt"
 
@@ -34,6 +36,7 @@ func (s *tokenService) IssueToken(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	uid, err := strconv.Atoi(params["uid"][0])
 	if err != nil {
+		log.Error(err)
 		http.Error(w, "Couldn't convert user ID to int", http.StatusBadRequest)
 	}
 
@@ -45,6 +48,7 @@ func (s *tokenService) IssueToken(w http.ResponseWriter, r *http.Request) {
 
 	signedJWT, err := jwt.Sign(t, jwa.RS256, s.config.PrivateJWK)
 	if err != nil {
+		log.Error(err)
 		http.Error(w, "Couldn't sign JWT", http.StatusInternalServerError)
 	}
 	_, err = w.Write(signedJWT)
@@ -57,6 +61,7 @@ func (s *tokenService) ServePublicKey(w http.ResponseWriter, r *http.Request) {
 
 	buf, err := json.Marshal(keyset)
 	if err != nil {
+		log.Error(err)
 		http.Error(w, "Failed to marshal key", http.StatusInternalServerError)
 	}
 	w.Header().Add("Content-Type", "application/json")
